@@ -1,6 +1,7 @@
-# Uganda Financial Services - Loan Eligibility Assessment Platform
+# Loan Eligibility Assessment Platform
 
-Machine Learning-powered loan eligibility platform with Uganda-specific financial data and professional banking interface. Built with FastAPI, React, and Scikit-learn.
+Machine Learning powered loan eligibility platform with financial data from Uganda and professional banking interface. 
+Built with FastAPI, React, and Scikit-learn.
 
 ## Features
 
@@ -9,13 +10,13 @@ Machine Learning-powered loan eligibility platform with Uganda-specific financia
 - **120+ Behavioral Features**: Advanced feature engineering across 7 thematic categories
 - **Multiple ML Models**: Logistic Regression, Random Forest, XGBoost, LightGBM, Neural Networks (FFN, LSTM)
 - **Fairness & Interpretability**: SHAP and LIME explanations for transparent decision-making
-- **Real-time API**: FastAPI-based REST API for seamless integration
-- **Modern Frontend**: React-based user interface for applicants and loan officers
+- **Real-time API**: (FastAPI) REST API for seamless integration
+- **Modern Frontend**: React based user interface for applicants and loan officers
 
 ### Technical Highlights
 - **High Accuracy**: >88% prediction accuracy with AUC-ROC >0.85
 - **Scalable Architecture**: Microservices design with Docker containerization
-- **Production-Ready**: PostgreSQL database, Redis caching, monitoring with Prometheus/Grafana
+- **Production Ready**: PostgreSQL database, Redis caching, monitoring with Prometheus/Grafana
 - **Security First**: Encryption at rest and in transit, RBAC, audit logging
 - **Automated Retraining**: Monthly model updates with feedback loops
 
