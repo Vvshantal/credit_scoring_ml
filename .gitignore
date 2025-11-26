@@ -1,0 +1,46 @@
+# Python
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Environment
+.env
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+
+# Logs
+*.log
+api_server.log
+
+# Frontend
+frontend/node_modules/
+frontend/build/
+frontend/.env.local
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Claude Code
+.claude/
+.claude_history
+DEPLOY_QUICK_REFERENCE.txt
+.vercel
+
+# Large data files
+data/raw/PS_*.csv
+*.sav
+data/features/*.csv
+
+# Model files (large)
+models_trained/*.joblib

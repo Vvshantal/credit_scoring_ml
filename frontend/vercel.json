@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "buildCommand": "npm install && npm run build",
+  "outputDirectory": "build",
+  "framework": null,
+  "env": {
+    "REACT_APP_API_URL": "https://uganda-loan-platform.onrender.com"
+  },
+  "build": {
+    "env": {
+      "REACT_APP_API_URL": "https://uganda-loan-platform.onrender.com"
+    }
+  }
+}
