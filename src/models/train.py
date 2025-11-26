@@ -1,13 +1,14 @@
-"""Model training module for the ML Loan Eligibility Platform."""
+"""Model training module for credit scoring ML models."""
 
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 import joblib
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score
+from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+# from sklearn.neighbors import KNeighborsClassifier  # Commented out for now
 from sklearn.metrics import (
     accuracy_score,
     precision_score,
@@ -16,15 +17,22 @@ from sklearn.metrics import (
     roc_auc_score,
     average_precision_score,
 )
-import xgboost as xgb
-import lightgbm as lgb
 from imblearn.over_sampling import SMOTE
-from imblearn.pipeline import Pipeline as ImbPipeline
-import optuna
-from ..utils.logging import LoggerMixin
+
+try:
+    import xgboost as xgb
+    HAS_XGBOOST = True
+except ImportError:
+    HAS_XGBOOST = False
+
+try:
+    import lightgbm as lgb
+    HAS_LIGHTGBM = True
+except ImportError:
+    HAS_LIGHTGBM = False
 
 
-class ModelTrainer(LoggerMixin):
+class ModelTrainer:
     """Model trainer for loan eligibility prediction."""
 
     def __init__(
@@ -47,12 +55,7 @@ class ModelTrainer(LoggerMixin):
         self.results: Dict[str, Dict[str, float]] = {}
         self.best_model: Optional[Any] = None
         self.best_model_name: Optional[str] = None
-        self.logger.info(
-            "model_trainer_initialized",
-            test_size=test_size,
-            val_size=val_size,
-            random_state=random_state,
-        )
+        print(f"Model trainer initialized: test_size={test_size}, val_size={val_size}, random_state={random_state}")
 
     def prepare_data(
         self,
@@ -91,19 +94,10 @@ class ModelTrainer(LoggerMixin):
             smote = SMOTE(random_state=self.random_state)
             X_train, y_train = smote.fit_resample(X_train, y_train)
 
-            self.logger.info(
-                "smote_applied",
-                original_samples=len(y_temp) * (1 - self.val_size),
-                resampled_samples=len(y_train),
-            )
+            print(f"SMOTE applied: {int(len(y_temp) * (1 - self.val_size))} -> {len(y_train)} samples")
 
-        self.logger.info(
-            "data_prepared",
-            train_samples=len(y_train),
-            val_samples=len(y_val),
-            test_samples=len(y_test),
-            train_class_dist=y_train.value_counts().to_dict(),
-        )
+        print(f"Data prepared: train={len(y_train)}, val={len(y_val)}, test={len(y_test)}")
+        print(f"Training class distribution: {y_train.value_counts().to_dict()}")
 
         return X_train, X_val, X_test, y_train, y_val, y_test
 
@@ -127,7 +121,7 @@ class ModelTrainer(LoggerMixin):
         Returns:
             Tuple of (trained model, metrics dict)
         """
-        self.logger.info("training_logistic_regression")
+        print("Training Logistic Regression...")
 
         # Default parameters
         params = {
@@ -149,7 +143,7 @@ class ModelTrainer(LoggerMixin):
         self.models["logistic_regression"] = model
         self.results["logistic_regression"] = metrics
 
-        self.logger.info("logistic_regression_trained", metrics=metrics)
+        print(f"Logistic Regression trained: {metrics}")
 
         return model, metrics
 
@@ -173,7 +167,7 @@ class ModelTrainer(LoggerMixin):
         Returns:
             Tuple of (trained model, metrics dict)
         """
-        self.logger.info("training_random_forest")
+        print("Training Random Forest...")
 
         # Default parameters
         params = {
@@ -196,7 +190,7 @@ class ModelTrainer(LoggerMixin):
         self.models["random_forest"] = model
         self.results["random_forest"] = metrics
 
-        self.logger.info("random_forest_trained", metrics=metrics)
+        print(f"Random Forest trained: {metrics}")
 
         return model, metrics
 
@@ -474,7 +468,7 @@ class ModelTrainer(LoggerMixin):
             save_path: Path to save the model
         """
         if model_name not in self.models:
-            self.logger.error("model_not_found", model_name=model_name)
+            print(f"Error: Model {model_name} not found")
             return
 
         # Create directory if it doesn't exist
@@ -483,11 +477,7 @@ class ModelTrainer(LoggerMixin):
         # Save model
         joblib.dump(self.models[model_name], save_path)
 
-        self.logger.info(
-            "model_saved",
-            model_name=model_name,
-            path=save_path,
-        )
+        print(f"Model saved: {model_name} -> {save_path}")
 
     def load_model(
         self,
@@ -508,11 +498,7 @@ class ModelTrainer(LoggerMixin):
         if model_name:
             self.models[model_name] = model
 
-        self.logger.info(
-            "model_loaded",
-            path=model_path,
-            model_name=model_name,
-        )
+        print(f"Model loaded: {model_path} -> {model_name}")
 
         return model
 

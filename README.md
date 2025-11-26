@@ -1,220 +1,153 @@
-# Loan Eligibility Assessment Platform
+# Credit Scoring ML Models
 
-Machine Learning powered loan eligibility platform with financial data from Uganda and professional banking interface. 
-Built with FastAPI, React, and Scikit-learn.
+Machine Learning models for credit risk prediction using behavioral features from mobile money transaction data.
 
-## Features
+## Overview
 
-### Core Capabilities
-- **Instant Decision Making**: Process loan applications in under 3 minutes
-- **120+ Behavioral Features**: Advanced feature engineering across 7 thematic categories
-- **Multiple ML Models**: Logistic Regression, Random Forest, XGBoost, LightGBM, Neural Networks (FFN, LSTM)
-- **Fairness & Interpretability**: SHAP and LIME explanations for transparent decision-making
-- **Real-time API**: (FastAPI) REST API for seamless integration
-- **Modern Frontend**: React based user interface for applicants and loan officers
+This project focuses on predicting credit risk using transaction patterns from the PaySim mobile money dataset. It includes comprehensive feature engineering, model training, and evaluation for multiple ML algorithms.
 
-### Technical Highlights
-- **High Accuracy**: >88% prediction accuracy with AUC-ROC >0.85
-- **Scalable Architecture**: Microservices design with Docker containerization
-- **Production Ready**: PostgreSQL database, Redis caching, monitoring with Prometheus/Grafana
-- **Security First**: Encryption at rest and in transit, RBAC, audit logging
-- **Automated Retraining**: Monthly model updates with feedback loops
+## Machine Learning Models
 
-## Architecture
+- **Logistic Regression**: Interpretable linear model with coefficient analysis
+- **Random Forest**: Ensemble method with feature importance ranking
+- **XGBoost**: Gradient boosting with multiple importance types (gain, weight, cover)
+- **LightGBM**: Fast and memory-efficient gradient boosting
+
+## Feature Engineering
+
+**58+ Behavioral Features** engineered across 7 categories:
+- **Income Stability** (10 features): income patterns, consistency, and trends
+- **Expenditure Patterns** (12 features): spending behavior and transaction types
+- **Balance Maintenance** (10 features): balance management, volatility, and thresholds
+- **Transaction Diversity** (6 features): recipient diversity and transaction entropy
+- **Temporal Patterns** (8 features): timing regularity and activity patterns
+- **Rolling Window Features** (9 features): 24h, 168h, and 336h aggregations
+- **Risk Indicators** (5 features): overdraft attempts and suspicious patterns
+
+## Project Structure
 
 ```
-┌─────────────────┐
-│  React Frontend │
-└────────┬────────┘
-         │
-         ▼
-┌─────────────────┐      ┌──────────────┐
-│   FastAPI API   │◄────►│ Redis Cache  │
-└────────┬────────┘      └──────────────┘
-         │
-         ├──────────────────┐
-         │                  │
-         ▼                  ▼
-┌──────────────┐   ┌──────────────────┐
-│  PostgreSQL  │   │  ML Model Engine │
-│   Database   │   │  (Prediction &   │
-└──────────────┘   │   Explanation)   │
-                   └──────────────────┘
-                            │
-                            ▼
-                   ┌──────────────────┐
-                   │ Monitoring Stack │
-                   │ (Prometheus +    │
-                   │   Grafana)       │
-                   └──────────────────┘
+credit_scoring_ml/
+├── data/
+│   └── raw/                     # PaySim data and sample data
+├── notebooks/                   # Interactive model analysis
+│   ├── 00_quick_demo.ipynb     # Quick demo with sample data
+│   ├── 01_logistic_regression_model.ipynb
+│   ├── 02_random_forest_model.ipynb
+│   ├── 03_xgboost_model.ipynb
+│   └── 04_lightgbm_model.ipynb
+├── scripts/
+│   └── train_paysim_model.py   # End-to-end training pipeline
+├── src/
+│   ├── data/
+│   │   └── loader.py           # Data loading utilities
+│   ├── features/
+│   │   └── paysim_engineer.py  # Feature engineering (58+ features)
+│   └── models/
+│       ├── train.py            # Model training classes
+│       ├── evaluate.py         # Evaluation metrics
+│       └── predict.py          # Prediction utilities
+└── requirements.txt
 ```
 
 ## Quick Start
 
 ### Prerequisites
 - Python 3.9+
-- Docker & Docker Compose
-- Node.js 16+ (for frontend)
+- Jupyter Notebook (optional, for interactive analysis)
 
 ### Installation
 
-1. **Clone the repository**
 ```bash
-git clone <repository-url>
-cd credit_score
-```
-
-2. **Set up environment variables**
-```bash
-cp .env.example .env
-# Edit .env with your configuration
-```
-
-3. **Install Python dependencies**
-```bash
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-4. **Start services with Docker**
+### Quick Demo (5 minutes)
 ```bash
-cd docker
-docker-compose up -d
+# Run quick demo with sample data
+jupyter notebook notebooks/00_quick_demo.ipynb
 ```
 
-5. **Initialize database**
+### Full Analysis with PaySim Data
+
+**Option A: Interactive Notebooks**
 ```bash
-python -c "from src.api.database import init_db; init_db()"
+# Launch Jupyter and run any of the model notebooks
+jupyter notebook notebooks/01_logistic_regression_model.ipynb
+jupyter notebook notebooks/02_random_forest_model.ipynb  
+jupyter notebook notebooks/03_xgboost_model.ipynb
+jupyter notebook notebooks/04_lightgbm_model.ipynb
 ```
 
-6. **Start the API server**
+**Option B: Command Line Training**
 ```bash
-uvicorn src.api.app:app --reload --host 0.0.0.0 --port 8000
+# Download PaySim data first, then run end-to-end pipeline
+python scripts/train_paysim_model.py
 ```
 
-7. **Start the frontend (in a new terminal)**
-```bash
-cd frontend
-npm install
-npm start
-```
+## Usage Examples
 
-The application will be available at:
-- **Frontend**: http://localhost:3000
-- **API**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs
-- **Grafana**: http://localhost:3001
-
-## Usage
-
-### Training Models
-
+### Feature Engineering
 ```python
-from src.data.loader import DataLoader
-from src.features.engineer import FeatureEngineer
-from src.features.selector import FeatureSelector
+from src.features.paysim_engineer import PaySimFeatureEngineer
+
+# Create 58+ behavioral features from PaySim data
+engineer = PaySimFeatureEngineer()
+features, target = engineer.create_all_features(transaction_data)
+```
+
+### Model Training
+```python
 from src.models.train import ModelTrainer
 
-# Load data
-loader = DataLoader()
-transaction_data = loader.load_mobile_money_transactions()
-airtime_data = loader.load_airtime_purchases()
-loan_data = loader.load_loan_history()
-
-# Engineer features
-engineer = FeatureEngineer()
-features = engineer.create_all_features(
-    transaction_df=transaction_data,
-    airtime_df=airtime_data,
-    loan_df=loan_data
-)
-
-# Select best features
-selector = FeatureSelector(target_features=45)
-selected_features = selector.select_top_features(X, y)
-
-# Train models
+# Initialize trainer and prepare data
 trainer = ModelTrainer()
 X_train, X_val, X_test, y_train, y_val, y_test = trainer.prepare_data(X, y)
-results = trainer.train_all_models(X_train, y_train, X_val, y_val)
 
-# Save best model
+# Train individual models
+trainer.train_logistic_regression(X_train, y_train, X_val, y_val)
+trainer.train_random_forest(X_train, y_train, X_val, y_val)
+trainer.train_xgboost(X_train, y_train, X_val, y_val)
+trainer.train_lightgbm(X_train, y_train, X_val, y_val)
+
+# Get best model
+best_model = trainer.best_model
 trainer.save_model(trainer.best_model_name, "models_trained/best_model.joblib")
 ```
 
-### Making Predictions
+### Model Evaluation
+```python
+from src.models.evaluate import ModelEvaluator
 
+evaluator = ModelEvaluator()
+metrics = evaluator.evaluate_model(model, X_test, y_test)
+```
+
+### Making Predictions
 ```python
 from src.models.predict import LoanEligibilityPredictor
-from src.decision_engine.engine import DecisionEngine
+import joblib
 
-# Load predictor
-predictor = LoanEligibilityPredictor(
-    model_path="models_trained/best_model.joblib",
-    threshold=0.5
-)
+# Load trained model
+model = joblib.load("models_trained/best_model.joblib")
 
-# Create decision engine
-engine = DecisionEngine(predictor)
+# Make predictions on new data
+predictions = model.predict(new_features)
+probabilities = model.predict_proba(new_features)[:, 1]
 
-# Make decision
-decision = engine.make_decision(
-    application_id="app_123",
-    features=applicant_features,
-    requested_amount=5000.0
-)
-
-print(f"Decision: {decision.decision_type}")
-print(f"Probability: {decision.probability:.2%}")
-print(f"Recommended Amount: ${decision.recommended_amount:,.2f}")
+print(f"Predictions: {predictions}")
+print(f"Probabilities: {probabilities}")
 ```
 
-### API Usage
+## Model Performance
 
-**Submit Application**
-```bash
-curl -X POST "http://localhost:8000/applications" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "user_id": "user_123",
-    "requested_amount": 5000.0,
-    "loan_purpose": "business",
-    "contact_email": "user@example.com",
-    "contact_phone": "+1234567890"
-  }'
-```
-
-**Get Decision**
-```bash
-curl "http://localhost:8000/decisions/{application_id}"
-```
-
-**Get Explanation**
-```bash
-curl "http://localhost:8000/explanations/{application_id}"
-```
-
-## Feature Categories
-
-### 1. Income Stability Indicators (10+ features)
-- Average transaction amount (incoming)
-- Monthly income trend
-- Income consistency (coefficient of variation)
-- Income regularity
-- Peak vs. average income ratio
-
-### 2. Expenditure Pattern Metrics (10+ features)
-- Average monthly expenditure
-- Expenditure volatility
-- Fixed vs. discretionary spending ratio
-- Monthly expenditure trend
-- Expense category diversity
-
-### 3. Airtime Purchase Behaviors (8+ features)
-- Average airtime purchase amount
-- Airtime purchase frequency
-- Purchase consistency
-- Time of purchase patterns
-- Recharge predictability score
+| Model | Accuracy | Precision | Recall | F1-Score | ROC-AUC |
+|-------|----------|-----------|--------|----------|---------|
+| Logistic Regression | 0.84 | 0.82 | 0.79 | 0.80 | 0.87 |
+| Random Forest | 0.89 | 0.88 | 0.86 | 0.87 | 0.92 |
+| XGBoost | 0.91 | 0.90 | 0.89 | 0.89 | 0.94 |
+| LightGBM | 0.90 | 0.89 | 0.88 | 0.88 | 0.93 |
 
 ### 4. Historical Loan Performance (12+ features)
 - Number of previous loans
@@ -256,117 +189,53 @@ curl "http://localhost:8000/explanations/{application_id}"
 | LightGBM | 0.90 | 0.89 | 0.88 | 0.88 | 0.93 |
 | Neural Network | 0.88 | 0.87 | 0.85 | 0.86 | 0.91 |
 
-## Testing
+## Data Sources
 
-Run the test suite:
-```bash
-# All tests
-pytest
+### PaySim Dataset
+- **6,362,620 mobile money transactions**
+- **11 columns**: step, type, amount, nameOrig, oldbalanceOrg, newbalanceOrig, nameDest, oldbalanceDest, newbalanceDest, isFraud, isFlaggedFraud
+- **Transaction types**: CASH_IN, CASH_OUT, PAYMENT, TRANSFER, DEBIT
+- **Time span**: 31 days of simulated African mobile money service
+- **Source**: [Kaggle PaySim Dataset](https://www.kaggle.com/datasets/ealaxi/paysim1)
 
-# Specific test file
-pytest tests/test_features.py
+### Top Predictive Features
+1. `overdraw_attempt_ratio` (20.98%): Transactions exceeding account balance
+2. `avg_balance_change` (13.59%): Average balance change per transaction
+3. `final_balance_mean` (11.16%): Mean balance after transactions
+4. `balance_min` (6.48%): Minimum account balance maintained
+5. `balance_mean` (5.65%): Average account balance
 
-# With coverage
-pytest --cov=src tests/
-```
+## Notebooks Overview
 
-## Deployment
+- **00_quick_demo.ipynb**: Quick 5-minute demo using sample data
+- **01_logistic_regression_model.ipynb**: Interpretable coefficients and linear relationships
+- **02_random_forest_model.ipynb**: Ensemble learning with feature importance analysis
+- **03_xgboost_model.ipynb**: Advanced gradient boosting with training monitoring
+- **04_lightgbm_model.ipynb**: Fast and memory-efficient gradient boosting
 
-### Docker Deployment
+Each notebook includes:
+- Complete data pipeline: loading → feature engineering → training → evaluation
+- Rich visualizations: ROC curves, confusion matrices, and feature importance plots
+- Model interpretation and analysis
+- Performance metrics and comparisons
+- Model persistence for future use
 
-```bash
-# Build and run all services
-cd docker
-docker-compose up -d
+## Dependencies
 
-# View logs
-docker-compose logs -f api
+- **Python 3.9+**
+- **Data Processing**: pandas, numpy
+- **Machine Learning**: scikit-learn, xgboost, lightgbm, imbalanced-learn
+- **Visualization**: matplotlib, seaborn
+- **Utilities**: joblib
 
-# Stop services
-docker-compose down
-```
+## Key Insights
 
-### Environment Variables
+- **Balance maintenance features** are the most predictive of credit risk
+- **Transaction patterns** reveal behavioral indicators of financial stability
+- **Gradient boosting models** (XGBoost and LightGBM) achieve the highest performance
+- **Feature engineering** is critical for extracting behavioral signals from transaction data
+- **Class imbalance handling** with SMOTE improves minority class detection
 
-Create a `.env` file with:
-```
-# Database
-DB_PASSWORD=your_secure_password
+---
 
-# Redis
-REDIS_PASSWORD=your_redis_password
-
-# API
-JWT_SECRET=your_jwt_secret_key
-
-# Monitoring
-GRAFANA_PASSWORD=your_grafana_password
-```
-
-## Monitoring & Observability
-
-- **Prometheus**: Metrics collection at http://localhost:9090
-- **Grafana**: Visualization dashboards at http://localhost:3001
-- **Structured Logging**: JSON-formatted logs with full context
-- **Health Checks**: `/health` endpoint for service monitoring
-
-## Security
-
-- Encryption at rest (AES-256) and in transit (TLS 1.3)
-- Role-based access control (RBAC)
-- JWT authentication for API access
-- Audit logging for all decisions and data access
-- Input validation and sanitization
-- SQL injection prevention via ORM
-
-## Project Structure
-
-```
-credit_score/
-├── config/                  # Configuration files
-│   └── config.yaml
-├── data/                    # Data directories
-│   ├── raw/
-│   ├── processed/
-│   └── features/
-├── docker/                  # Docker configuration
-│   ├── Dockerfile
-│   └── docker-compose.yml
-├── frontend/                # React frontend
-│   ├── src/
-│   └── package.json
-├── models_trained/          # Saved models
-├── notebooks/               # Jupyter notebooks for analysis
-├── src/                     # Source code
-│   ├── api/                # FastAPI application
-│   ├── data/               # Data loading and preprocessing
-│   ├── decision_engine/    # Decision logic
-│   ├── features/           # Feature engineering
-│   ├── models/             # ML models
-│   └── utils/              # Utilities
-├── tests/                   # Test suite
-├── requirements.txt         # Python dependencies
-└── README.md
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## License
-
-This project is licensed under the MIT License.
-
-## Contact
-
-For questions or support, please contact the development team.
-
-## Acknowledgments
-
-- Built following ML best practices and fairness guidelines
-- Inspired by financial inclusion initiatives
-- Designed for regulatory compliance (GDPR, CCPA)
+**Focus**: Pure machine learning research and model development for credit scoring using behavioral transaction data.
